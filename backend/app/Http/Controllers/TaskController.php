@@ -41,14 +41,12 @@ class TaskController extends Controller
         // Buscar la tarea
         $task = Task::findOrFail($taskId);
 
-        // Verificar si el usuario ya está asociado a la tarea
-        if (!$task->users()->where('user_id', $validated['user_id'])->exists()) {
-            // Asociar al usuario con la tarea si no está registrado
-            $task->users()->attach($validated['user_id'], ['status' => $validated['status']]);
-        } else {
-            // Actualizar el estado en la tabla pivot si ya está asociado
-            $task->users()->updateExistingPivot($validated['user_id'], ['status' => $validated['status']]);
-        }
+        // Crear un nuevo registro en la tabla pivot
+        $task->users()->attach($validated['user_id'], [
+            'status' => $validated['status'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         return response()->json([
             'message' => 'Task status updated successfully',
@@ -57,6 +55,22 @@ class TaskController extends Controller
 
     public function historyTaskId($taskId)
     {
+        /* // Buscar la tarea
+        $task = Task::with(['users' => function ($query) {
+            $query->withPivot('status', 'created_at')
+                ->orderBy('pivot_created_at', 'asc');
+        }])->findOrFail($taskId);
+
+        return response()->json([
+            'task' => $task->title,
+            'history' => $task->users->map(function ($user) {
+                return [
+                    'user' => $user->name,
+                    'status' => $user->pivot->status,
+                    'changed_at' => $user->pivot->created_at,
+                ];
+            }),
+        ]); */
 
         // Buscar la tarea
         $task = Task::findOrFail($taskId);

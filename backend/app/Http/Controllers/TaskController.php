@@ -91,4 +91,46 @@ class TaskController extends Controller
 
         return response()->json($tasksWithLastStatus);
     }
+
+    public function updateTask(Request $request, $taskId)
+    {
+        // Validar los datos de entrada
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+        ]);
+
+        // Buscar la tarea por ID
+        $task = Task::find($taskId);
+
+        if (!$task) {
+            return response()->json(['message' => 'Task not found'], 404);
+        }
+
+        // Actualizar los valores de la tarea
+        $task->title = $validatedData['title'];
+        $task->description = $validatedData['description'];
+
+        // Guardar los cambios
+        $task->save();
+
+        return response()->json([
+            'message' => 'Task updated successfully',
+        ]);
+    }
+
+    public function deleteTask($taskId)
+    {
+        // Buscar la tarea por ID
+        $task = Task::find($taskId);
+
+        if (!$task) {
+            return response()->json(['message' => 'Task not found'], 404);
+        }
+
+        // Eliminar la tarea
+        $task->delete();
+
+        return response()->json(['message' => 'Task deleted successfully']);
+    }
 }

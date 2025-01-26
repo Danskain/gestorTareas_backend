@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Tymon\JWTAuth\Contracts\Providers\JWT;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -67,7 +68,7 @@ class UsersController extends Controller
         return response()->json([
             'message' => 'Login Successfully!',
             'user' => $user->makeHidden(['password']),
-            'token' => $token
+            'token' => $token,
         ], 201);
     }
 

@@ -10,6 +10,7 @@ Asegúrate de tener instaladas las siguientes herramientas antes de comenzar:
 2. **Composer** (para la gestión de dependencias de PHP)
 3. **Git** (para clonar el repositorio)
 4. **Base de datos MySQL** (o cualquier otra base de datos soportada por Laravel)
+5. **Registrarce a https://mailtrap.io/** (gestor de correo electronico para pruebas en desarrollo)
 
 ## Instrucciones de instalación
 
@@ -42,6 +43,14 @@ Conexión a la base de datos
 **DB_USERNAME=usuario**
 **DB_PASSWORD=contraseña**
 
+poner las credenciales para el envio de email
+
+**MAIL_MAILER=smtp**
+**MAIL_HOST=sandbox.smtp.mailtrap.io**
+**MAIL_PORT=2525**
+**MAIL_USERNAME=**
+**MAIL_PASSWORD=**
+
 ### 4. Generar clave de aplicación
 
 php artisan key:generate
@@ -57,3 +66,7 @@ php artisan serve
 ## Acceso a la aplicación
 
 Abre tu navegador y visita: http://localhost:8000
+
+### 7. para correr los job
+
+php artisan queue:work

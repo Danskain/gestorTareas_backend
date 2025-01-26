@@ -3,148 +3,80 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Task;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
+use App\Http\Requests\UpdateTaskStatusRequest;
+use App\Jobs\TaskStatusJob;
+use App\Services\TaskService;
+use App\Mail\SharedTask;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
-    public function storeTask(Request $request)
+    protected $taskService;
+
+    public function __construct(TaskService $taskService)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'user_id' => 'required|exists:users,id', // Usuario creador de la tarea
-        ]);
-
-        $task = Task::create([
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-        ]);
-
-        // Registrar en la tabla pivot con status "Creada"
-        $task->users()->attach($validated['user_id'], ['status' => 'Creada']);
-
-        return response()->json([
-            'message' => 'Task created successfully',
-            'task' => $task,
-        ]);;
+        $this->taskService = $taskService;
     }
 
-    public function updateTaskStatus(Request $request, $taskId)
+    public function storeTask(StoreTaskRequest $request)
     {
-        // Validar los datos de entrada
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id', // Usuario que modifica la tarea
-            'status' => 'required|string|max:255', // Nuevo estado de la tarea
-        ]);
 
-        // Buscar la tarea
-        $task = Task::findOrFail($taskId);
+        $validated = $request->validated();
 
-        // Crear un nuevo registro en la tabla pivot
-        $task->users()->attach($validated['user_id'], [
-            'status' => $validated['status'],
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $task = $this->taskService->createTask($validated);
 
-        return response()->json([
-            'message' => 'Task status updated successfully',
-        ]);
+        return jsonResponse(['task' => $task,]);
+    }
+
+    public function updateTaskStatus(UpdateTaskStatusRequest $request, $taskId)
+    {
+        $validated = $request->validated();
+
+        //TaskStatusJob::dispatch($task, $this->taskService, $taskId, $validated);
+
+        //return jsonResponse(['task' => $data]);
+
+        $task = $this->taskService->updateTaskStatus($taskId, $validated);
+        $user = $this->taskService->getUserById($validated['user_id']);
+
+        Mail::to($user['email'])->queue(new SharedTask($task, Auth::user(), $validated['status']));
+
+
+        return jsonResponse([]);
+        //return jsonResponse(['task' => $task, 'user' => $user, 'userAutenticated' => Auth::user()]);
     }
 
     public function historyTaskId($taskId)
     {
-        /* // Buscar la tarea
-        $task = Task::with(['users' => function ($query) {
-            $query->withPivot('status', 'created_at')
-                ->orderBy('pivot_created_at', 'asc');
-        }])->findOrFail($taskId);
+        $task = $this->taskService->getTaskHistory($taskId);
 
-        return response()->json([
-            'task' => $task->title,
-            'history' => $task->users->map(function ($user) {
-                return [
-                    'user' => $user->name,
-                    'status' => $user->pivot->status,
-                    'changed_at' => $user->pivot->created_at,
-                ];
-            }),
-        ]); */
-
-        // Buscar la tarea
-        $task = Task::findOrFail($taskId);
-
-        // Obtener el historial actualizado
-        $taskWithUsers = $task->load('users');
-
-        return response()->json([
-            'message' => 'Task history',
-            'task' => $taskWithUsers,
-        ]);
+        return jsonResponse(['task' => $task,]);
     }
 
     public function getAllTasksWithLastStatus()
     {
-        // Obtener todas las tareas con los usuarios asociados
-        $tasks = Task::with(['users' => function ($query) {
-            $query->latest('pivot_updated_at') // Ordenar por la fecha de la última actualización en la tabla pivot
-                ->take(1); // Tomar solo el último estado
-        }])->get();
+        $tasks = $this->taskService->getAllTasksWithLastStatus();
 
-        // Formatear las tareas para incluir solo el último estado
-        $tasksWithLastStatus = $tasks->map(function ($task) {
-            // Obtener el último estado de la tarea desde los usuarios
-            $lastStatus = $task->users->first()?->pivot->status;
 
-            return [
-                'task' => $task,
-                'last_status' => $lastStatus,
-            ];
-        });
-
-        return response()->json($tasksWithLastStatus);
+        return jsonResponse(['task' => $tasks,]);
     }
 
-    public function updateTask(Request $request, $taskId)
+    public function updateTask(UpdateTaskRequest $request, $taskId)
     {
-        // Validar los datos de entrada
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-        ]);
+        $validatedData = $request->validated();
 
-        // Buscar la tarea por ID
-        $task = Task::find($taskId);
+        $task = $this->taskService->updateTask($taskId, $validatedData);
 
-        if (!$task) {
-            return response()->json(['message' => 'Task not found'], 404);
-        }
-
-        // Actualizar los valores de la tarea
-        $task->title = $validatedData['title'];
-        $task->description = $validatedData['description'];
-
-        // Guardar los cambios
-        $task->save();
-
-        return response()->json([
-            'message' => 'Task updated successfully',
-        ]);
+        return jsonResponse(['task' => $task,]);
     }
 
     public function deleteTask($taskId)
     {
-        // Buscar la tarea por ID
-        $task = Task::find($taskId);
+        $this->taskService->deleteTask($taskId);
 
-        if (!$task) {
-            return response()->json(['message' => 'Task not found'], 404);
-        }
-
-        // Eliminar la tarea
-        $task->delete();
-
-        return response()->json(['message' => 'Task deleted successfully']);
+        return jsonResponse([]);
     }
 }

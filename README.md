@@ -16,11 +16,9 @@ Asegúrate de tener instaladas las siguientes herramientas antes de comenzar:
 
 Sigue estos pasos para clonar y ejecutar el proyecto:
 
-### 1. Clonar el repositorio y entrar backend
+### 1. Clonar el repositorio
 
 git clone https://github.com/Danskain/gestorTareas_backend
-
-cd backend
 
 ### 2. Instalar dependencias de PHP con Composer
 

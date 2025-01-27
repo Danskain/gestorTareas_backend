@@ -9,7 +9,11 @@ Route::post('/register', [UsersController::class, 'register']);
 Route::post('/login', [UsersController::class, 'login']);
 Route::get('/dashboard', [UsersController::class, 'dashboard']);
 Route::get('/logout', [UsersController::class, 'logout']);
+
+
 Route::get('/users', [UsersController::class, 'getAllUsers']);
+
+
 
 Route::middleware('token')->group(function () {
     Route::post('/create-tasks', [TaskController::class, 'storeTask']);

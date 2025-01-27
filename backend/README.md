@@ -10,7 +10,7 @@ Asegúrate de tener instaladas las siguientes herramientas antes de comenzar:
 2. **Composer** (para la gestión de dependencias de PHP)
 3. **Git** (para clonar el repositorio)
 4. **Base de datos MySQL** (o cualquier otra base de datos soportada por Laravel)
-5. **Registrarce a https://mailtrap.io/** (gestor de correo electronico para pruebas en desarrollo)
+5. **Registrarse a https://mailtrap.io/** (gestor de correo electronico para pruebas en desarrollo)
 
 ## Instrucciones de instalación
 

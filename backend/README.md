@@ -70,3 +70,7 @@ Abre tu navegador y visita: http://localhost:8000
 ### 7. para correr los job
 
 php artisan queue:work
+
+### 7. para correr los test
+
+php artisan test
